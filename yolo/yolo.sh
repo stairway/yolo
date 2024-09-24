@@ -22,7 +22,7 @@ fi
 
 YOLO_FLAVOR=ubuntu; \
 [ -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" ] && . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
-YOLO_DOMAIN="${YOLO_DOMAIN:-liatrio.com}"; \
+YOLO_DOMAIN="${YOLO_DOMAIN:-example.com}"; \
 GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Andrew Haller}"; \
 GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-andrew.haller@$YOLO_DOMAIN}"; \
 GIT_CONFIG_USERNAME="${GIT_CONFIG_USERNAME:-andrewhaller}"; \
@@ -202,7 +202,7 @@ __init() {
   exists /data || ln -s \$DATA_SRC /data
   exists \$DATA_SRC || mkdir \$DATA_SRC
   exists ~/.local/$7 || mkdir -p ~/.local/$7
-  quick_links \$DATA_SRC ~\$DATA_SRC
+  # quick_links \$DATA_SRC ~\$DATA_SRC
   \$(cat /etc/passwd | grep "^\$TARGET_OS_FLAVOR:x:1000" >/dev/null) || \
     create_wheel_user "\$(echo \$OS_NAME | awk '{print \$1}')" "\$OS_ID"
   exists "/home/\$OS_ID/.local" || mkdir -p "/home/\$OS_ID/.local/$7"
@@ -226,7 +226,7 @@ __init_gpg() {
     gpg --quick-gen-key --homedir ~/.gnupg --yes --always-trust --batch --passphrase '' aws-vault
 
     ### *Fixes* gpg: WARNING: unsafe permissions on homedir '~/.gnupg'
-    chown -R \$user ~/.gnupg
+    #chown -R \$user ~/.gnupg
     chmod 700 ~/.gnupg
     #chmod 600 ~/.gnupg/*
   fi
@@ -540,7 +540,7 @@ __install_gh() {
 
 __install_vault() {
   wget -O- https://apt.releases.hashicorp.com/gpg | gpg --yes --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg >/dev/null
-  gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
+  ! gpg --no-default-keyring --keyring /usr/share/keyrings/hashicorp-archive-keyring.gpg --fingerprint
   echo \\
     "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com \$(lsb_release -cs) main" | \\
     tee /etc/apt/sources.list.d/hashicorp.list

@@ -8,17 +8,17 @@ SCRIPT_DIR_ALIAS := $(shell sed "s@$$HOME@~@" <<<$$(pwd))
 YOLO_DATA_TARGET_DEFAULT = ~/Data
 YOLO_VAULT_SERVER_DEV_DEFAULT = y
 
-YOLO_DEBIAN_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; name="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$name" -p "👤 Full Name $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_DEBIAN_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; domain="$${YOLO_DOMAIN:-liatrio.com}"; name="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$name" -p "👤 Email $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_DEBIAN_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; name="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$name" -p "👤 GitHub Username $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_DEBIAN_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; name="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$name -p "💽 Data mount target $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
+YOLO_DEBIAN_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Full Name" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_DEBIAN_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; domain="$${YOLO_DOMAIN:-example.com}"; value="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Email" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_DEBIAN_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "GitHub Username" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_DEBIAN_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$value -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Data mount target" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 
-YOLO_UBUNTU_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; name="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$name" -p "👤 Full Name $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_UBUNTU_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; domain="$${YOLO_DOMAIN:-liatrio.com}"; name="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$name" -p "👤 Email $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_UBUNTU_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; name="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$name" -p "👤 GitHub Username $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
-YOLO_UBUNTU_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; name="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$name -p "💽 Data mount target $$(printf "\033[2m[%s]\033[0m" "$$name"): " input && [ -n "$$input" ] || input="$$name"; echo "$$input"')
+YOLO_UBUNTU_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Full Name" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_UBUNTU_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; domain="$${YOLO_DOMAIN:-example.com}"; value="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Email" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_UBUNTU_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "GitHub Username" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_UBUNTU_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$value -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Data mount target" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 
-YOLO_VAULT_SERVER_DEV = $(shell bash -c 'name=$(YOLO_VAULT_SERVER_DEV_DEFAULT); read -n 1 -r -p "YOLO_VAULT_SERVER_DEV: [Y/n] " input && [ -n "$$input" ] || input="$$name"; [ "$$input" = "y" -o "$$input" = "Y" ] && echo "dev" || echo')
+YOLO_VAULT_SERVER_DEV = $(shell bash -c 'value=$(YOLO_VAULT_SERVER_DEV_DEFAULT); read -n 1 -r -p "YOLO_VAULT_SERVER_DEV: [Y/n] " input && [ -n "$$input" ] || input="$$value"; [ "$$input" = "y" -o "$$input" = "Y" ] && echo "dev" || echo')
 
 all: $(TARGETS)
 	@printf "\033[1m%s\033[0m\n" "Please specify additional targets"
@@ -59,7 +59,7 @@ vault-dev: .vault-dev
 	@printf "\033[7;1mContainerfy %s\033[0m\n" "vault-server"
 
 vault: .vault
-	@sh ~/Tools/containerfy/mariadb/vault.sh $(YOLO_VAULT_SERVER_DEV)
+	@sh ~/Tools/containerfy/vault/vault.sh $(YOLO_VAULT_SERVER_DEV)
 
 .mariadb:
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "mariadb"
