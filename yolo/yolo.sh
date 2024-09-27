@@ -3,11 +3,15 @@
 set -e
 LC_CTYPE=C
 
+YOLO_PROFILE_NAME="${1:-yolo}"
+YOLO_FLAVOR="${2:-ubuntu}"
+YOLO_VOLUME_NAME="${3:-containerfy-$YOLO_PROFILE_NAME-home}"
+
 if [ -f "$0" ]; then
   SCRIPT_FILENAME="$0"
   SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 else
-  SCRIPT_FILENAME="yolo.sh"
+  SCRIPT_FILENAME="${YOLO_PROFILE_NAME}.${YOLO_FLAVOR}.sh"
   SCRIPT_DIR="$(pwd)"
 fi
 
@@ -18,29 +22,33 @@ fi
 # Example using YOLO_DATA_TARGET override:
 #     $ YOLO_DATA_TARGET="$PWD/../mount/data/" sh yolo.sh
 # Example using multiple overrides:
-#     $ YOLO_DATA_TARGET="$PWD/../mount/data/" PORT_EIGHT_THOUSAND=9100 PORT_EIGHTY_EIGHTY=9180 RANDOM=$RANDOM ENTRYPOINT_NAME=yolo.docker-entrypoint.$RANDOM.sh sh yolo.sh
+#     $ YOLO_DATA_TARGET="$PWD/../mount/data/" PORT_EIGHT_THOUSAND=9000 PORT_EIGHTY_EIGHTY=9080 RANDOM=$RANDOM ENTRYPOINT_NAME=yolo.docker-entrypoint.$RANDOM.sh sh yolo.sh
 
-YOLO_FLAVOR=ubuntu; \
+yolo_mount_path() { local path="$(dirname $SCRIPT_DIR)/.dockermount/${1}"; path=${path%/}; echo "$path"; }; \
+volume_create() { local target="$(yolo_mount_path $2)"; [ -d "$target" ] || mkdir -p "$target"; docker volume create "$1"; }; \
+volume_create "$YOLO_VOLUME_NAME" "$YOLO_PROFILE_NAME" >/dev/null; \
 [ -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" ] && . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
-YOLO_DOMAIN="${YOLO_DOMAIN:-example.com}"; \
-GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Andrew Haller}"; \
-GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-andrew.haller@$YOLO_DOMAIN}"; \
-GIT_CONFIG_USERNAME="${GIT_CONFIG_USERNAME:-andrewhaller}"; \
-YOLO_MOUNT_CONTEXT="${YOLO_MOUNT_CONTEXT:-$SCRIPT_DIR/../.dockermount}"; \
-YOLO_DATA_TARGET="${YOLO_DATA_TARGET:-$YOLO_MOUNT_CONTEXT/data}"; \
-YOLO_PROFILE_TARGET="${YOLO_PROFILE_TARGET:-$YOLO_MOUNT_CONTEXT/yolo}"; \
+GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Full Name}"; \
+GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-full.name@example.com}"; \
+GIT_CONFIG_USERNAME="${GIT_CONFIG_USERNAME:-fullname}"; \
+YOLO_DOMAIN_DEFAULT="$(echo $GIT_CONFIG_EMAIL | awk -F '@' '{print $2}')"; \
+YOLO_DOMAIN="${YOLO_DOMAIN:-$YOLO_DOMAIN_DEFAULT}"; \
+YOLO_MOUNT_CONTEXT="$(yolo_mount_path)"; \
+YOLO_DATA_TARGET="${YOLO_DATA_TARGET:-$YOLO_MOUNT_CONTEXT/data}" && ([ -d $YOLO_DATA_TARGET ] || mkdir -p $YOLO_DATA_TARGET); \
+YOLO_PROFILE_TARGET="${YOLO_PROFILE_TARGET:-$YOLO_MOUNT_CONTEXT/yolo}" && ([ -d $YOLO_PROFILE_TARGET ] || mkdir -p $YOLO_PROFILE_TARGET); \
 PORT_EIGHT_THOUSAND="${PORT_EIGHT_THOUSAND:-9000}"; \
 PORT_EIGHTY_EIGHTY=${PORT_EIGHTY_EIGHTY:-9080}; \
 SEED="${RANDOM:-$SEED}"; \
 DATA_MOUNT_SRC="/${DATA_MOUNT_SRC:-$(basename $YOLO_DATA_TARGET)}"; \
-YOLO_WHEEL=root YOLO_DEBUG=true; \
+YOLO_WHEEL=sudo YOLO_DEBUG=true; \
+ENTRYPOINT_PATH_PREFIX="$YOLO_PROFILE_TARGET"; \
+ENTRYPOINT_CONTAINER_PATH="/bin/docker-entrypoint.sh"; \
+SSH_CONFIG_PREFIX="~/.ssh/github"; \
 set -- \
   "$SCRIPT_FILENAME" "$SEED" "$DATA_MOUNT_SRC" \
   "$(uname -s | tr '[:upper:]' '[:lower:]')/$(uname -m)" "$(date -u +%Y-%m-%dT%TZ)" \
   "${TAILSCALED_IN_FOREGROUND:-false}" "$(basename $YOLO_PROFILE_TARGET)" "$YOLO_FLAVOR" "$YOLO_WHEEL"; \
   CONTAINER_NAME="$7-$8-$2" && \
-  ([ -d $YOLO_DATA_TARGET ] || mkdir -p $YOLO_DATA_TARGET) && \
-  ([ -d $YOLO_PROFILE_TARGET ] || mkdir -p $YOLO_PROFILE_TARGET) && \
   printf "%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n" \
     "YOLO_DOMAIN" "$YOLO_DOMAIN" "GIT_CONFIG_FULL_NAME" "$GIT_CONFIG_FULL_NAME" \
     "GIT_CONFIG_EMAIL" "$GIT_CONFIG_EMAIL" "GIT_CONFIG_USERNAME" "$GIT_CONFIG_USERNAME" \
@@ -58,15 +66,16 @@ set -- \
     ENTRYPOINT_NAME_OVERWRITE=$(__overwrite_entrypoint) && \
     printf "%s: %s\n" "ENTRYPOINT_NAME_OVERWRITE" "$ENTRYPOINT_NAME_OVERWRITE" && \
     [ "$ENTRYPOINT_NAME_OVERWRITE" = "y" -o "$ENTRYPOINT_NAME_OVERWRITE" = "Y" ] && \
-    (cp "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME.old"; exit 0) || exit 1) ) || \
+    (cp "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" "${YOLO_PROFILE_TARGET}/${ENTRYPOINT_NAME}.old"; exit 0) || exit 1) ) || \
   ENTRYPOINT_NAME="$7.docker-entrypoint.$8.$SEED.sh" && \
-  printf "%s: %s\n" "ENTRYPOINT_NAME" "$ENTRYPOINT_NAME"
-  show_processing() { sleep 1 && printf "Processing " && (for i in {1..2}; do sleep 1; printf "."; done; sleep 1; echo); }
+  ENTRYPOINT_PATH="$ENTRYPOINT_PATH_PREFIX/$ENTRYPOINT_NAME" && \
+  printf "%s: %s\n" "ENTRYPOINT_PATH" "$ENTRYPOINT_PATH" && \
+  show_processing() { sleep 1 && printf "Processing " && (for i in {1..2}; do sleep 1; printf "."; done; sleep 1; echo); } && \
   show_processing && docker logs -f $(docker run -d --name="$CONTAINER_NAME" --platform=linux/amd64 \
     -e "TZ=America/Chicago" -e "EDITOR=nano" -e "TERM=$(echo ${TERM:-xterm-color} | sed 's/256//')" \
     -e "GIT_CONFIG_USERNAME=${GIT_CONFIG_USERNAME}" -e "GIT_CONFIG_FULL_NAME=${GIT_CONFIG_FULL_NAME}" \
-    -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=$(echo $GIT_CONFIG_EMAIL | awk -F '@' '{print $2}')" \
-    -v $(cat >"$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" <<EOF
+    -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
+    -v $(cat >"$ENTRYPOINT_PATH" <<EOF
 # https://docs.docker.com/reference/dockerfile/#automatic-platform-args-in-the-global-scope
 SCRIPT_FILENAME="$1" SEED=$2 DATA_SRC="$3" \\
 BUILD_PLATFORM="$4" BUILDSTART="$5" TAILSCALED_IN_FOREGROUND="$6" \\
@@ -84,7 +93,7 @@ set -eu
 sanity_check() {
   printf "%s\n" "Open the pod bay doors HAL."
   local err=0
-  [ -f /.dockerenv -a -f /docker-entrypoint.sh ] || err=\$?
+  [ -f /.dockerenv -a -f "$ENTRYPOINT_CONTAINER_PATH" ] || err=\$?
   [ "\$err" -eq 0 ] || (sleep 2; printf "%s\n" "I'm sorry Dave, I'm afraid I can't do that."; sleep 1)
   return \$err
 }
@@ -110,29 +119,41 @@ print_debug "SEED:" "\${SEED}"
 
 set -x
 
-has() { command -v "\${1:-""}" >/dev/null; }
-is() { [ "\${1:-false}" = "true" -o "\${1:-0}" = "1" ] || return \$?; }
-exists() { [ -e "\${1:-""}" ] || return \$?; }
-value() { [ "\${1:-""}x" != "x" ] || return \$?; }
-equals() { ! value "\${1:-""}" || ! value "\${2:-""}" || [ "\$1" = "\$2" ] || return \$?; }
-upper() { ! value "\${1:-""}" || echo "\$1" | tr '[:lower:]' '[:upper:]'; }
-lower() { ! value "\${1:-""}" || echo "\$1" | tr '[:upper:]' '[:lower:]'; }
+cat <<EOT >/etc/profile.d/01-environment.sh
+has() { command -v "\\\${1:-""}" >/dev/null; }
+is() { [ "\\\${1:-false}" = "true" -o "\\\${1:-0}" = "1" ] || return \\\$?; }
+exists() { [ -e "\\\${1:-""}" ] || return \\\$?; }
+value() { [ "\\\${1:-""}x" != "x" ] || return \\\$?; }
+equals() { ! value "\\\${1:-""}" || ! value "\\\${2:-""}" || [ "\\\$1" = "\\\$2" ] || return \\\$?; }
+upper() { ! value "\\\${1:-""}" || echo "\\\$1" | tr '[:lower:]' '[:upper:]'; }
+lower() { ! value "\\\${1:-""}" || echo "\\\$1" | tr '[:upper:]' '[:lower:]'; }
 
-export OS_NAME="\$(echo "\$OS_RELEASE" | awk '{print \$1}')"
-export OS_ID="\$(echo "\$OS_RELEASE" | awk '{print \$2}')"
-export OS_VERSION_ID="\$(echo "\$OS_RELEASE" | awk '{print \$3}')"
-export OS_VERSION_CODENAME="\$(echo "\$OS_RELEASE" | awk '{print \$4}')"
-export OS_RELEASE="\$(echo "\${OS_ID}\${1:--}\${OS_VERSION_CODENAME}")"
+pss() { ps -xf --sort -tty; }
+has() { command -v "\\\$1" 1>/dev/null 2>&1; }
+is() { [ "\\\${1:-false}" = "true" ] || return \\\$?; }
+exists() { [ -e "\\\$1" ] || return \\\$?; }
+value() { [ "\\\${1:-""}x" != "x" ] || return \\\$?; }
+gh_login() { gh auth status 2>/dev/null || gh auth login -p https -w; }
+
+OS_RELEASE="\$OS_RELEASE"
+export OS_NAME="\\\$(echo "\\\$OS_RELEASE" | awk '{print \\\$1}')"
+export OS_ID="\\\$(echo "\\\$OS_RELEASE" | awk '{print \\\$2}')"
+export OS_VERSION_ID="\\\$(echo "\\\$OS_RELEASE" | awk '{print \\\$3}')"
+export OS_VERSION_CODENAME="\\\$(echo "\\\$OS_RELEASE" | awk '{print \\\$4}')"
+export OS_RELEASE="\\\$(echo "\\\${OS_ID}\\\${1:--}\\\${OS_VERSION_CODENAME}")"
+
+export DISTRO="\\\$OS_ID"
+export DISTRO_VERSION="\\\$OS_VERSION_ID"
+export VERSION_CODENAME="\\\$OS_VERSION_CODENAME"
+export PROFILE_DIR="/etc/profile.$7.d/\\\$OS_RELEASE"
+EOT
+
+. /etc/profile.d/01-environment.sh
 
 # For apt
 export DEBIAN_FRONTEND=noninteractive
 # For Homebrew
 export NONINTERACTIVE=1
-
-DISTRO="\$OS_ID"
-DISTRO_VERSION="\$OS_VERSION_ID"
-VERSION_CODENAME="\$OS_VERSION_CODENAME"
-PROFILE_DIR="/etc/profile.$7.d/\$OS_RELEASE"
 
 flavor_check() {
   value "\$DISTRO" && value "\$TARGET_OS_FLAVOR" && return 0
@@ -252,7 +273,7 @@ __configure_motd() {
   mkdir -p /etc/motd.d && echo "" >/etc/motd.d/newline
   grep --color=never -E -q '(^#?\s*account\s*requisite\s*pam_time\.so$)(\s*)' /etc/pam.d/su && \\
   sed -z -E -i "s@(#?\s*account\s*requisite\s*pam_time\.so)(\s*)@\1\2\\
-# Enable MOTD - Added dynamically by /docker-entrypoint.sh via $SCRIPT_FILENAME\\\\
+# Enable MOTD - Added dynamically by "$ENTRYPOINT_CONTAINER_PATH" via $SCRIPT_FILENAME\\\\
 ###\\\\
 # Prints the message of the day upon successful login.\\\\
 # (Replaces the 'MOTD_FILE' option in login.defs)\\\\
@@ -282,17 +303,19 @@ __configure_nanorc() {
 
 __configure_profile() {
   __configure_nanorc
-  (echo; echo "if [ -f /etc/bash_completion ] && ! shopt -oq posix; then . /etc/bash_completion; fi") >> /root/.bashrc
+  cp /etc/skel/.profile /root/.profile
+  cp /etc/skel/.bashrc /root/.bashrc
   exists "\$PROFILE_DIR" || mkdir -p "\$PROFILE_DIR"
-  local f=""
-  for f in /root/.bashrc /home/\$OS_ID/.bashrc /etc/skel/.bashrc; do
-    if [ -f "\$f" ] ; then
-      cat <<EOT >> \$f
 
+  cat <<EOT > /etc/profile.d/02-reload.sh
+__get_os_codename() { . /etc/os-release; echo "\\\${ID:-""}-\\\${VERSION_CODENAME:-""}"; }
+__profile_dir() { echo "\$(dirname \$PROFILE_DIR)/\\\$(__get_os_codename)"; }
 reload() {
-  if [ -d "\$PROFILE_DIR" ]; then
+  local profile_dir="\\\$(__profile_dir)"
+  printf "Loading '%s' ...\n" "\\\$profile_dir"
+  if [ -d "\\\$profile_dir" ]; then
     i=0
-    for i in \$PROFILE_DIR/*.sh; do
+    for i in \\\${profile_dir}/*.sh; do
       if [ -r \\\$i ]; then
         . \\\$i
       fi
@@ -301,13 +324,14 @@ reload() {
   fi
 }
 reload
-
-if [ -d ~/.local/$7/bin ]; then PATH="\\\$HOME/.local/$7/bin:\\\$PATH"; fi
-if [ -d ~/.local/bin ]; then PATH="\\\$HOME/.local/bin:\\\$PATH"; fi
-if [ -d ~/bin ]; then PATH="\\\$HOME/bin:\\\$PATH"; fi
 EOT
-    fi
-  done
+
+cat <<EOT >>/root/.profile
+
+if [ -d "\\\$HOME/.local/$7/bin" ] ; then
+  PATH="\\\$HOME/.local/$7/bin:\\\$PATH"
+fi
+EOT
 
   if equals "\$TARGET_OS_FLAVOR" "debian" ; then
     cat <<EOT >"\$PROFILE_DIR/01-ls-colors.sh"
@@ -318,9 +342,9 @@ export SHELL
 export LS_OPTIONS='--color=auto'
 eval "\\\$(dircolors)"
 alias ls='ls \\\$LS_OPTIONS'
-alias ll='ls \\\$LS_OPTIONS -alF'
-alias la='ls \\\$LS_OPTIONS -A'
-alias l='ls \\\$LS_OPTIONS -lA'
+alias ll='ls \\\$LS_OPTIONS -alhF'
+alias la='ls \\\$LS_OPTIONS -hA'
+alias l='ls \\\$LS_OPTIONS -lhA'
 EOT
 
   cat <<EOT >"\$PROFILE_DIR/01-grep-colors.sh"
@@ -632,42 +656,42 @@ EOT
 }
 
 __ssh_config() {
-  exists ~/.ssh/\$YOLO_DOMAIN || mkdir -p ~/.ssh/\$YOLO_DOMAIN
-  ! exists ~/.ssh/\$YOLO_DOMAIN/config || cp ~/.ssh/\$YOLO_DOMAIN/config ~/.ssh/\$YOLO_DOMAIN/config.old
+  exists $SSH_CONFIG_PREFIX/\$YOLO_DOMAIN || mkdir -p $SSH_CONFIG_PREFIX/\$YOLO_DOMAIN
+  ! exists $SSH_CONFIG_PREFIX/\$YOLO_DOMAIN/config || cp $SSH_CONFIG_PREFIX/\$YOLO_DOMAIN/config $SSH_CONFIG_PREFIX/\$YOLO_DOMAIN/config.old
   ! exists ~/.ssh/config || cp ~/.ssh/config ~/.ssh/config.old
 
   cat <<EOT >"\$PROFILE_DIR/01-ssh-config.sh"
 # This file was generated by $SCRIPT_FILENAME
 # DO NOT EDIT THIS FILE BY HAND -- CHANGES WILL BE OVERWRITTEN
 
-if [ ! -e ~/.ssh/\\\$YOLO_DOMAIN ]; then
-  mkdir -p ~/.ssh/\\\$YOLO_DOMAIN
+if [ ! -e $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN ]; then
+  mkdir -p $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN
   key_count=0
-  key_count=\\\$(ls -1 ~/.ssh/\\\$YOLO_DOMAIN | grep --color=never -o id_ed25519.fingerprint | wc -l)
+  key_count=\\\$(ls -1 $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN | grep --color=never -o id_ed25519.fingerprint | wc -l)
   if [ "\\\${key_count}" -lt 1 ]; then
-    printf "\033[93m>\033[0m Generating ssh ed25519 keypair with empty password ...\n\033[96;1m%s\033[0m\n" "ssh-keygen -t ed25519 -C '\\\${EMAIL}' -f ~/.ssh/\\\$YOLO_DOMAIN/id_ed25519 -N ''"
-    ssh-keygen -t ed25519 -C "\\\${EMAIL}" -f ~/.ssh/\\\$YOLO_DOMAIN/id_ed25519 -N "" > ~/.ssh/\\\$YOLO_DOMAIN/id_ed25519.fingerprint && cat ~/.ssh/\\\$YOLO_DOMAIN/id_ed25519.pub
+    printf "\033[93m>\033[0m Generating ssh ed25519 keypair with empty password ...\n\033[96;1m%s\033[0m\n" "ssh-keygen -t ed25519 -C '\\\${EMAIL}' -f $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_ed25519 -N ''"
+    ssh-keygen -t ed25519 -C "\\\${EMAIL}" -f $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_ed25519 -N "" > $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_ed25519.fingerprint && cat $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_ed25519.pub
   fi
   key_count=0
-  key_count=\\\$(ls -1 ~/.ssh/\\\$YOLO_DOMAIN | grep --color=never -o id_rsa.fingerprint | wc -l)
+  key_count=\\\$(ls -1 $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN | grep --color=never -o id_rsa.fingerprint | wc -l)
   if [ "\\\${key_count}" -lt 1 ]; then
-    printf "\033[93m>\033[0m Generating ssh rsa keypair with empty password ...\n\033[96;1m%s\033[0m\n" "ssh-keygen -t rsa -b 4096 -C '\\\${EMAIL}' -f ~/.ssh/\\\$YOLO_DOMAIN/id_rsa -N ''"
-    ssh-keygen -t rsa -b 4096 -C "\\\${EMAIL}" -f ~/.ssh/\\\$YOLO_DOMAIN/id_rsa -N "" > ~/.ssh/\\\$YOLO_DOMAIN/id_rsa.fingerprint && cat ~/.ssh/\\\$YOLO_DOMAIN/id_rsa.pub
+    printf "\033[93m>\033[0m Generating ssh rsa keypair with empty password ...\n\033[96;1m%s\033[0m\n" "ssh-keygen -t rsa -b 4096 -C '\\\${EMAIL}' -f $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_rsa -N ''"
+    ssh-keygen -t rsa -b 4096 -C "\\\${EMAIL}" -f $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_rsa -N "" > $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_rsa.fingerprint && cat $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_rsa.pub
   fi
   unset key_count
 fi
 
-  cat <<EOS >~/.ssh/\\\$YOLO_DOMAIN/config
+  cat <<EOS >$SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/config
 Host github.com
   HostName github.com
   User git
   AddKeysToAgent yes
   IgnoreUnknown UseKeychain
-  IdentityFile ~/.ssh/\\\$YOLO_DOMAIN/id_ed25519
+  IdentityFile $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/id_ed25519
 EOS
 
   cat <<EOS >~/.ssh/config
-Include ~/.ssh/\\\$YOLO_DOMAIN/config
+Include $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN/config
 EOS
 EOT
 }
@@ -733,13 +757,6 @@ __ps1_color() {
   local _PS1_FG="\\\${1:-\\\$C_DEFAULT}"
   echo "\\\${_PS1_OPEN_ESC}\\\${_PS1_FG}\\\${_PS1_CLOSE_ESC}"
 }
-
-pss() { ps -xf --sort -tty; }
-has() { command -v "\\\$1" 1>/dev/null 2>&1; }
-is() { [ "\\\${1:-false}" = "true" ] || return \\\$?; }
-exists() { [ -e "\\\$1" ] || return \\\$?; }
-value() { [ "\\\${1:-""}x" != "x" ] || return \\\$?; }
-gh_login() { gh auth status 2>/dev/null || gh auth login -p https -w; }
 
 load_env() {
   ! exists ~/.local/$7/.env || . ~/.local/$7/.env
@@ -1121,15 +1138,15 @@ main "\$@"
 # We shouldn't reach this point
 exec tail -f /dev/null
 EOF
-    chmod +x "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME")"$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME":/docker-entrypoint.sh \
-    -v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh" -v "$YOLO_PROFILE_TARGET/.kube:/root/.kube" -v "$YOLO_PROFILE_TARGET/.aws:/root/.aws" \
-    -v "$YOLO_PROFILE_TARGET/.kpv3-cli:/root/.kpv3-cli" -v "$YOLO_PROFILE_TARGET/.cache:/root/.cache" -v "$YOLO_PROFILE_TARGET/.local:/root/.local/$7" \
-    -v "$YOLO_PROFILE_TARGET/.gnupg:/root/.gnupg" -v "$YOLO_PROFILE_TARGET/.password-store:/root/.password-store" -v "$YOLO_PROFILE_TARGET/.awsvault:/root/.awsvault" \
-    -v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC" -v "$YOLO_PROFILE_TARGET/profile.d:/etc/profile.$7.d" \
+    chmod +x "$ENTRYPOINT_PATH")"$ENTRYPOINT_PATH":"$ENTRYPOINT_CONTAINER_PATH" \
+    --mount type=volume,source="$YOLO_VOLUME_NAME",target=/root \
+    -v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh" -v "$YOLO_PROFILE_TARGET/.kube:/root/.kube" \-v "$YOLO_PROFILE_TARGET/.aws:/root/.aws" \
+    -v "$YOLO_PROFILE_TARGET/$8/.local:/root/.local/$7" -v "$YOLO_PROFILE_TARGET/$8/profile.$7.d:/etc/profile.$7.d" \
+    -v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC" \
     -v /var/run/docker.sock:/var/run/docker.sock \
     --cap-add=NET_ADMIN --device /dev/net/tun \
     -p "$PORT_EIGHT_THOUSAND:8000" -p "$PORT_EIGHTY_EIGHTY:8080" \
-    --init --entrypoint "/docker-entrypoint.sh" "$8:latest"
+    --init --entrypoint "$ENTRYPOINT_CONTAINER_PATH" "$8:latest"
 ) | tee -a "$SCRIPT_DIR/${CONTAINER_NAME}.log" 2>&1
 
 # Update port mappings of existing container

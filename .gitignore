@@ -3,6 +3,7 @@
 *.log
 *.old
 *.bak
+*.orig
 *.env
 *.zip
 _*
