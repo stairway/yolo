@@ -3,6 +3,17 @@
 set -e
 LC_CTYPE=C
 
+check_bash_version() {
+  local target_version=$1 current_version=${BASH_VERSINFO:-0} err=0
+  [ $current_version -ge $target_version ] || err=$?
+  [ ${err:-0} -gt 0 ] && \
+    printf "Requires bash version >=%s. Your current bash major version is %s.\n" "$target_version" "${current_version:-0}"
+  return $err
+}
+
+check_bash_version 3
+
+YOLO_LOADED=${YOLO_LOADED:-false}
 YOLO_PROFILE_NAME="${1:-yolo}"
 YOLO_FLAVOR="${2:-ubuntu}"
 YOLO_VOLUME_NAME="${3:-containerfy-$YOLO_PROFILE_NAME-home}"
@@ -27,7 +38,7 @@ fi
 yolo_mount_path() { local path="$(dirname $SCRIPT_DIR)/.dockermount/${1}"; path=${path%/}; echo "$path"; }; \
 volume_create() { local target="$(yolo_mount_path $2)"; [ -d "$target" ] || mkdir -p "$target"; docker volume create "$1"; }; \
 volume_create "$YOLO_VOLUME_NAME" "$YOLO_PROFILE_NAME" >/dev/null; \
-[ -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" ] && . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
+! test -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" || $YOLO_LOADED || . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
 GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Full Name}"; \
 GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-full.name@example.com}"; \
 GIT_CONFIG_USERNAME="${GIT_CONFIG_USERNAME:-fullname}"; \
@@ -1019,10 +1030,13 @@ EOT
 # Prefix the prompt with a small branding logo (see font requirements)
 # options: UNI_LINUX|UNI_UBUNTU|UNI_UBUNTU_DARK|UNI_DEBIAN|UNI_APPLE|UNI_WINDOWS
 # PS1_NERD_BRANDING_LOGO=UNI_LINUX
+
+# Example vault address using docker hostname (needs to be on the same docker network)
+# export VAULT_ADDR='http://vault-server-dev:8200'
 EOT
 
   if equals "\$TARGET_OS_FLAVOR" "debian" ; then
-    cat ~/.env | grep PS1_NERD_BRANDING_LOGO || echo "PS1_NERD_BRANDING_LOGO=UNI_DEBIAN" >> ~/.env
+    cat ~/.env | grep PS1_NERD_BRANDING_LOGO || echo "PS1_NERD_BRANDING_LOGO=UNI_DEBIAN" >> ~/.local/$7/.env
   fi
 
   bash -l -s $7

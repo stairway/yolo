@@ -1,6 +1,6 @@
 MAKEFLAGS += --no-print-directory
 
-.PHONY: all install test clean vault mariadb ubuntu debian network
+.PHONY: all install test debug clean vault mariadb ubuntu debian network
 
 UNAME := $(shell uname -s)
 SCRIPT_DIR_ALIAS := $(shell sed "s@$$HOME@~@" <<<$$(pwd))
@@ -23,6 +23,9 @@ YOLO_VAULT_SERVER_DEV = $(shell bash -c 'value=$(YOLO_VAULT_SERVER_DEV_DEFAULT);
 all: $(TARGETS)
 	@printf "\033[1m%s\033[0m\n" "Please specify additional targets"
 
+debug: $(TARGETS)
+	@printf "\033[4mShowing Vars\033[0m\n%s\t= %s\n" "SCRIPT_DIR_ALIAS" "$(SCRIPT_DIR_ALIAS)"
+
 install: $(TARGETS)
 	@printf "\nTo containerfy:\n\trun: \`\033[1m%s\033[0m\`\n" "make [install] <target> -C $(SCRIPT_DIR_ALIAS)"
 	@$(MAKE) .network_msg
@@ -41,46 +44,46 @@ network: .network
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "ubuntu"
 
 ubuntu: .containerfy_ubuntu
-	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) sh ~/Tools/containerfy/yolo/yolo.sh'
+	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) YOLO_LOADED=true sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.sh'
 
 .containerfy_debian: install
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "debian"
 
 debian: .containerfy_debian
-	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) sh ~/Tools/containerfy/yolo/yolo.debian.sh'
+	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) YOLO_LOADED=true sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.debian.sh'
 
 .vault-dev:
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "vault-server --dev"
 
 vault-dev: .vault-dev
-	@sh ~/Tools/containerfy/vault/vault.sh dev
+	@sh $(SCRIPT_DIR_ALIAS)/vault/vault.sh dev
 
 .vault:
 	@printf "\033[7;1mContainerfy %s\033[0m\n" "vault-server"
 
 vault: .vault
-	@sh ~/Tools/containerfy/vault/vault.sh $(YOLO_VAULT_SERVER_DEV)
+	@sh $(SCRIPT_DIR_ALIAS)/vault/vault.sh $(YOLO_VAULT_SERVER_DEV)
 
 .mariadb:
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "mariadb"
 
 mariadb: .mariadb
-	@sh ~/Tools/containerfy/mariadb/mariadb.sh
+	@sh $(SCRIPT_DIR_ALIAS)/mariadb/mariadb.sh
 
 # TODO: make 'yolo' dynamically reflective of PROFILE_NAME
 clean-ubuntu: clean-ubuntu-entrypoint
-	@rm -f ~/Tools/containerfy/yolo/yolo-ubuntu-*.log
+	@rm -f $(SCRIPT_DIR_ALIAS)/yolo/yolo-ubuntu-*.log
 	@docker rm -f $$(docker ps -a -q --filter name=yolo-ubuntu-*)
 
 clean-ubuntu-entrypoint:
-	@rm -f ~/Tools/containerfy/yolo/yolo.docker-entrypoint.ubuntu.*.sh
+	@rm -f $(SCRIPT_DIR_ALIAS)/yolo/yolo.docker-entrypoint.ubuntu.*.sh
 
 clean-debian: clean-debian-entrypoint
-	@rm -f ~/Tools/containerfy/yolo/yolo-debian-*.log
+	@rm -f $(SCRIPT_DIR_ALIAS)/yolo/yolo-debian-*.log
 	@docker rm -f $$(docker ps -a -q --filter name=yolo-debian-*)
 
 clean-debian-entrypoint:
-	@rm -f ~/Tools/containerfy/yolo/yolo.docker-entrypoint.debian.*.sh
+	@rm -f $(SCRIPT_DIR_ALIAS)/yolo/yolo.docker-entrypoint.debian.*.sh
 
 clean:
 	@docker volume prune
