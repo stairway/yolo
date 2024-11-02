@@ -38,7 +38,7 @@ fi
 yolo_mount_path() { local path="$(dirname $SCRIPT_DIR)/.dockermount/${1}"; path=${path%/}; echo "$path"; }; \
 volume_create() { local target="$(yolo_mount_path $2)"; [ -d "$target" ] || mkdir -p "$target"; docker volume create "$1"; }; \
 volume_create "$YOLO_VOLUME_NAME" "$YOLO_PROFILE_NAME" >/dev/null; \
-! test -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" || $YOLO_LOADED || . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
+[ ! -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" ] || . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
 GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Full Name}"; \
 GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-full.name@example.com}"; \
 GIT_CONFIG_USERNAME="${GIT_CONFIG_USERNAME:-fullname}"; \

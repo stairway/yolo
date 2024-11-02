@@ -44,13 +44,13 @@ network: .network
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "ubuntu"
 
 ubuntu: .containerfy_ubuntu
-	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) YOLO_LOADED=true sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.sh'
+	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.sh'
 
 .containerfy_debian: install
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "debian"
 
 debian: .containerfy_debian
-	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) YOLO_LOADED=true sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.debian.sh'
+	@bash -c 'conrol_c() { $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) sh $(SCRIPT_DIR_ALIAS)/yolo/yolo.debian.sh'
 
 .vault-dev:
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "vault-server --dev"
