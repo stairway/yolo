@@ -103,5 +103,5 @@ clean: ## Prune images and volumes
 	@docker volume prune
 	@docker image prune -a
 
-fix-permissions: ## Set .dockermount group ownership to 'staff'
+fix-permissions: ## Sets .dockermount group ownership to 'staff'
 	@sudo chown :staff $(SCRIPT_DIR)
