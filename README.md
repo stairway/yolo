@@ -4,7 +4,7 @@
 
 ### `fix-permissions`
 
-Sets .dockermount group ownership to 'staff'
+Fixes .dockermount permissions for multiple users
 
 > [!NOTE]
-> If cloned into a folder owned by `wheel` (unix-based systems e.g. Darwin/MacOS), run `make fix-permission` to **set .dockermount group ownership to 'staff'**.
+> If cloned into a folder owned by `wheel` (unix-based systems e.g. Darwin/MacOS), run `make fix-permission` if receiving permissions-related error.

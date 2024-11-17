@@ -103,6 +103,8 @@ clean: ## Prune images and volumes
 	@docker volume prune
 	@docker image prune -a
 
-fix-permissions: ## Sets .dockermount group ownership to 'staff'; Sets .dockermount/yolo/<ubuntu|debian> group permission to write
-	@sudo chown :staff "$(shell realpath $(SCRIPT_DIR)/.dockermount)"
-	@find .dockermount -type d ! -name '.*' -mindepth 2 -maxdepth 2 -exec sudo chmod g+w {} \;
+fix-permissions: ## Fixes permissions for multiple users
+	@sudo chown :staff .dockermount
+	@sudo chmod g+w .dockermount
+	@find .dockermount -type d ! -name '.*' -mindepth 1 -maxdepth 1 -exec sudo chown :staff {} \;
+	@find .dockermount -type d ! -name '.*' -mindepth 1 -maxdepth 1 -exec sudo chmod g+w {} \;
