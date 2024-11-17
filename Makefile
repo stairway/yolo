@@ -105,4 +105,4 @@ clean: ## Prune images and volumes
 
 fix-permissions: ## Sets .dockermount group ownership to 'staff'
 	@sudo chown :staff "$(shell realpath $(SCRIPT_DIR)/.dockermount)"
-	@find .dockermount -type d -mindepth 2 -maxdepth 2 -exec sudo chmod g+w {} \;
+	@find .dockermount -type d ! -name '.*' -mindepth 2 -maxdepth 2 -exec sudo chmod g+w {} \;
