@@ -83,7 +83,7 @@ set -- \
   printf "%s: %s\n" "ENTRYPOINT_PATH" "$ENTRYPOINT_PATH" && \
   show_processing() { sleep 1 && printf "Processing " && (for i in {1..2}; do sleep 1; printf "."; done; sleep 1; echo); } && \
   show_processing && docker logs -f $(docker run -d --name="$CONTAINER_NAME" --platform=linux/amd64 \
-    -e "TZ=America/Chicago" -e "EDITOR=nano" -e "TERM=$(echo ${TERM:-xterm-color} | sed 's/256//')" \
+    -e "TZ=America/Chicago" -e "VISUAL=nano" -e "TERM=$(echo ${TERM:-xterm-color} | sed 's/256//')" \
     -e "GIT_CONFIG_USERNAME=${GIT_CONFIG_USERNAME}" -e "GIT_CONFIG_FULL_NAME=${GIT_CONFIG_FULL_NAME}" \
     -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
     -v $(cat >"$ENTRYPOINT_PATH" <<EOF
@@ -742,8 +742,8 @@ C_BLUE_BOLD=\\\$'\033[01;34m'; C_PURPLE_BOLD=\\\$'\033[01;35m'; C_CYAN_BOLD=\\\$
 UNI_LINUX_LOGO=; UNI_UBUNTU_LOGO=; UNI_UBUNTU_DARK_LOGO=; UNI_DEBIAN_LOGO= UNI_APPLE_LOGO=; UNI_WINDOWS_LOGO=
 UNI_AWS=; UNI_TERRAFORM=; UNI_GIT=; UNI_GIT_ALT=; UNI_REPOSITORY=󰳏; UNI_CHEVRON_RIGHT=󰅂
 
-export VISUAL="\$EDITOR"
-export GIT_EDITOR="\$EDITOR"
+export EDITOR="\$VISUAL"
+export GIT_EDITOR="\$VISUAL"
 export TERM="\$TERM"
 
 if [ -n "$7" -a -d "~/.local/$7" ]; then
