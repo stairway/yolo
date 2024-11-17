@@ -8,5 +8,4 @@
 *.zip
 _*
 
-/.dockermount/*
-!/.dockermount/README.md
+/.dockermount
