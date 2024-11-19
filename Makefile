@@ -104,7 +104,8 @@ clean: ## Prune images and volumes
 	@docker image prune -a
 
 fix-permissions: ## Fixes permissions for multiple users
-	@sudo chown :staff .dockermount
-	@sudo chmod g+w .dockermount
-	@find .dockermount -type d ! -name '.*' -mindepth 1 -maxdepth 1 -exec sudo chown :staff {} \;
-	@find .dockermount -type d ! -name '.*' -mindepth 1 -maxdepth 1 -exec sudo chmod g+w {} \;
+	@(set -x; [ "$$(uname -s)" != "Darwin" ] || ! test -d .dockermount || sudo chown -R :staff .dockermount)
+	@(set -x; find . -type d ! -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sudo chmod -R 0775 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type d -mindepth 1 -maxdepth 1 -exec sudo chmod -R 0775 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type f -mindepth 1 -exec sudo chmod -R 0664 {} \;)
+	@(set -x; find . -type f -mindepth 1 -exec sudo chmod -R 0664 {} \;)
