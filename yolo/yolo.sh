@@ -1,22 +1,22 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -e
 LC_CTYPE=C
 
 check_bash_version() {
-  local target_version=$1 current_version=${BASH_VERSINFO:-0} err=0
+  local target_version=${1:-3} current_version=${BASH_VERSINFO:-0} err=0
   [ $current_version -ge $target_version ] || err=$?
   [ ${err:-0} -gt 0 ] && \
     printf "Requires bash version >=%s. Your current bash major version is %s.\n" "$target_version" "${current_version:-0}"
   return $err
 }
 
-check_bash_version 3
+check_bash_version
 
 YOLO_LOADED=${YOLO_LOADED:-false}
 YOLO_PROFILE_NAME="${1:-yolo}"
 YOLO_FLAVOR="${2:-ubuntu}"
-YOLO_VOLUME_NAME="${3:-containerfy-$YOLO_PROFILE_NAME-home}"
+YOLO_VOLUME_NAME="${3:-containerfy-${YOLO_PROFILE_NAME}-home}"
 
 if [ -f "$0" ]; then
   SCRIPT_FILENAME="$0"
@@ -25,6 +25,9 @@ else
   SCRIPT_FILENAME="${YOLO_PROFILE_NAME}.${YOLO_FLAVOR}.sh"
   SCRIPT_DIR="$(pwd)"
 fi
+
+# To persist value without specifying '--platform', the following can be exported
+DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 # IMPORTANT - If you don't intend to override the defaults, make sure YOLO_DATA_TARGET and YOLO_PROFILE_TARGET are not set
 
@@ -37,7 +40,7 @@ fi
 
 yolo_mount_path() { local path="$(dirname $SCRIPT_DIR)/.dockermount/${1}"; path=${path%/}; echo "$path"; }; \
 volume_create() { local target="$(yolo_mount_path $2)"; [ -d "$target" ] || mkdir -p "$target"; docker volume create "$1"; }; \
-volume_create "$YOLO_VOLUME_NAME" "$YOLO_PROFILE_NAME" >/dev/null; \
+volume_create "${YOLO_VOLUME_NAME}" "${YOLO_PROFILE_NAME}" >/dev/null; \
 [ ! -f "${SCRIPT_DIR}/${YOLO_FLAVOR}.env" ] || . "${SCRIPT_DIR}/${YOLO_FLAVOR}.env"; \
 GIT_CONFIG_FULL_NAME="${GIT_CONFIG_FULL_NAME:-Full Name}"; \
 GIT_CONFIG_EMAIL="${GIT_CONFIG_EMAIL:-full.name@example.com}"; \
@@ -46,50 +49,47 @@ YOLO_DOMAIN_DEFAULT="$(echo $GIT_CONFIG_EMAIL | awk -F '@' '{print $2}')"; \
 YOLO_DOMAIN="${YOLO_DOMAIN:-$YOLO_DOMAIN_DEFAULT}"; \
 YOLO_MOUNT_CONTEXT="$(yolo_mount_path)"; \
 YOLO_DATA_TARGET="${YOLO_DATA_TARGET:-$YOLO_MOUNT_CONTEXT/data}" && ([ -d $YOLO_DATA_TARGET ] || mkdir -p $YOLO_DATA_TARGET); \
-YOLO_PROFILE_TARGET="${YOLO_PROFILE_TARGET:-$YOLO_MOUNT_CONTEXT/yolo}" && ([ -d $YOLO_PROFILE_TARGET ] || mkdir -p $YOLO_PROFILE_TARGET); \
+YOLO_PROFILE_TARGET="${YOLO_PROFILE_TARGET:-$YOLO_MOUNT_CONTEXT/$YOLO_PROFILE_NAME}" && ([ -d $YOLO_PROFILE_TARGET ] || mkdir -p $YOLO_PROFILE_TARGET); \
 PORT_EIGHT_THOUSAND="${PORT_EIGHT_THOUSAND:-9000}"; \
 PORT_EIGHTY_EIGHTY=${PORT_EIGHTY_EIGHTY:-9080}; \
 SEED="${RANDOM:-$SEED}"; \
 DATA_MOUNT_SRC="/${DATA_MOUNT_SRC:-$(basename $YOLO_DATA_TARGET)}"; \
 YOLO_WHEEL=sudo YOLO_DEBUG=true; \
-ENTRYPOINT_PATH_PREFIX="$YOLO_PROFILE_TARGET"; \
-ENTRYPOINT_CONTAINER_PATH="/bin/docker-entrypoint.sh"; \
 SSH_CONFIG_PREFIX="~/.ssh/github"; \
+ENTRYPOINT_PATH_PREFIX="$YOLO_PROFILE_TARGET/$YOLO_FLAVOR/bin"; \
+[ -r "$ENTRYPOINT_PATH_PREFIX" ] || mkdir -p $ENTRYPOINT_PATH_PREFIX; \
 set -- \
   "$SCRIPT_FILENAME" "$SEED" "$DATA_MOUNT_SRC" \
   "$(uname -s | tr '[:upper:]' '[:lower:]')/$(uname -m)" "$(date -u +%Y-%m-%dT%TZ)" \
-  "${TAILSCALED_IN_FOREGROUND:-false}" "$(basename $YOLO_PROFILE_TARGET)" "$YOLO_FLAVOR" "$YOLO_WHEEL"; \
+  "${TAILSCALED_IN_FOREGROUND:-false}" "$YOLO_PROFILE_NAME" "$YOLO_FLAVOR" "$YOLO_WHEEL"; \
   CONTAINER_NAME="$7-$8-$2" && \
   printf "%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n%s: %s\n" \
     "YOLO_DOMAIN" "$YOLO_DOMAIN" "GIT_CONFIG_FULL_NAME" "$GIT_CONFIG_FULL_NAME" \
     "GIT_CONFIG_EMAIL" "$GIT_CONFIG_EMAIL" "GIT_CONFIG_USERNAME" "$GIT_CONFIG_USERNAME" \
-    "YOLO_DATA_TARGET" "$YOLO_DATA_TARGET" "DATA_MOUNT_SRC" "$DATA_MOUNT_SRC" \
-    "YOLO_PROFILE_TARGET" "$YOLO_PROFILE_TARGET" "PROFILE_NAME" "$7" "YOLO_FLAVOR" "$YOLO_FLAVOR" \
-    "SEED" "$SEED" "CONTAINER_NAME" "$CONTAINER_NAME" "YOLO_DEBUG" "$YOLO_DEBUG" && \
+    "YOLO_DATA_TARGET" "$YOLO_DATA_TARGET" "DATA_MOUNT_SRC" "$3" \
+    "YOLO_PROFILE_TARGET" "$YOLO_PROFILE_TARGET" "PROFILE_NAME" "$7" "YOLO_FLAVOR" "$8" \
+    "SEED" "$2" "CONTAINER_NAME" "$CONTAINER_NAME" "YOLO_DEBUG" "$YOLO_DEBUG" && \
   printf "%s: %s\n" "Port mappings" "$PORT_EIGHT_THOUSAND:8000, $PORT_EIGHTY_EIGHTY:8080" && \
   printf "\n" && read -n 1 -r -s -p $'\033[7m'"Press any key to continue ... "$'\033[0m' && printf "\n%s\n" "And away we go!" && \
   ENTRYPOINT_NAME="${ENTRYPOINT_NAME:-$7.docker-entrypoint.$8.sh}" && \
   __overwrite_entrypoint() { local input=""; read -r -p $'\033[32;1m'"? "$'\033[0m'$'\033[1m'"Overwrite?"$'\033[0m'" [Y/n] " input; [ -n "$input" ] || input="Y"; \
     expr $input : '[ynYN]' >/dev/null 2>&1 && echo $input || __overwrite_entrypoint; } && \
-    ([ ! -f "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" ] || \
-    (printf "\nFile '%s' already exists.\n%s '%s' %s ...\n" "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" \
+    ([ ! -f "$ENTRYPOINT_PATH_PREFIX/$ENTRYPOINT_NAME" ] || \
+    (printf "\nFile '%s' already exists.\n%s '%s' %s ...\n" "$ENTRYPOINT_PATH_PREFIX/$ENTRYPOINT_NAME" \
     "Overwrite it, or" "$7.docker-entrypoint.$8.$SEED.sh" "will be created" && \
     ENTRYPOINT_NAME_OVERWRITE=$(__overwrite_entrypoint) && \
     printf "%s: %s\n" "ENTRYPOINT_NAME_OVERWRITE" "$ENTRYPOINT_NAME_OVERWRITE" && \
     [ "$ENTRYPOINT_NAME_OVERWRITE" = "y" -o "$ENTRYPOINT_NAME_OVERWRITE" = "Y" ] && \
-    (cp "$YOLO_PROFILE_TARGET/$ENTRYPOINT_NAME" "${YOLO_PROFILE_TARGET}/${ENTRYPOINT_NAME}.old"; exit 0) || exit 1) ) || \
+    (cp "$ENTRYPOINT_PATH_PREFIX/$ENTRYPOINT_NAME" "${ENTRYPOINT_PATH_PREFIX}/${ENTRYPOINT_NAME}.old"; exit 0) || exit 1) ) || \
   ENTRYPOINT_NAME="$7.docker-entrypoint.$8.$SEED.sh" && \
   ENTRYPOINT_PATH="$ENTRYPOINT_PATH_PREFIX/$ENTRYPOINT_NAME" && \
+  ENTRYPOINT_CONTAINER_PATH="/root/bin/$ENTRYPOINT_NAME" && \
   printf "%s: %s\n" "ENTRYPOINT_PATH" "$ENTRYPOINT_PATH" && \
   show_processing() { sleep 1 && printf "Processing " && (for i in {1..2}; do sleep 1; printf "."; done; sleep 1; echo); } && \
-  show_processing && docker logs -f $(docker run -d --name="$CONTAINER_NAME" --platform=linux/amd64 \
-    -e "TZ=America/Chicago" -e "VISUAL=nano" -e "TERM=$(echo ${TERM:-xterm-color} | sed 's/256//')" \
-    -e "GIT_CONFIG_USERNAME=${GIT_CONFIG_USERNAME}" -e "GIT_CONFIG_FULL_NAME=${GIT_CONFIG_FULL_NAME}" \
-    -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
-    -v $(cat >"$ENTRYPOINT_PATH" <<EOF
+  show_processing && (cat >"$ENTRYPOINT_PATH" <<EOF
 # https://docs.docker.com/reference/dockerfile/#automatic-platform-args-in-the-global-scope
 SCRIPT_FILENAME="$1" SEED=$2 DATA_SRC="$3" \\
-BUILD_PLATFORM="$4" BUILDSTART="$5" TAILSCALED_IN_FOREGROUND="$6" \\
+HOST_PLATFORM="$4" BUILDSTART="$5" TAILSCALED_IN_FOREGROUND="$6" \\
 PROFILE_NAME="$7" TARGET_OS_FLAVOR="$8" WHEEL="$9" CONTAINER_NAME="$CONTAINER_NAME" \\
 TARGET_OS="\$(uname -s | tr '[:upper:]' '[:lower:]')" TARGETARCH="\$(uname -m)" TARGET_PLATFORM="\${TARGET_OS}/\$TARGETARCH" \\
 OS_RELEASE=\$(. /etc/os-release; echo \$(echo "\$NAME" | awk '{print \$1}') "\$ID" "\$VERSION_ID" "\$VERSION_CODENAME") \\
@@ -122,7 +122,7 @@ print_debug() {
     while [ \$# -gt 0 ]; do first="\$1"; second="\$2"; shift; shift; (set -- "\$first" "\$second" "DEBUG"; str_pad "\$@"); done
   fi
 }
-print_debug "BUILD_PLATFORM:" "\${BUILD_PLATFORM}"
+print_debug "HOST_PLATFORM:" "\${HOST_PLATFORM}"
 print_debug "TARGET_PLATFORM:" "\${TARGET_PLATFORM}"
 print_debug "TARGET_OS_FLAVOR:" "\${TARGET_OS_FLAVOR}"
 print_debug "BUILDSTART:" "\${BUILDSTART}"
@@ -308,8 +308,65 @@ __configure_pam() {
 }
 
 __configure_nanorc() {
-  grep --color=never -E -q '#?\s*(set\s*linenumbers)' /etc/nanorc && \\
-  sed -E -z -i "s@#?\s*(set\s*linenumbers)@\1@g" /etc/nanorc
+  grep --color=never -E -q '#?\s*(set\s*casesensitive)' /etc/nanorc && \\
+  sed -E -z -i "s@#?\s*(set\s*casesensitive)@\1@g" /etc/nanorc
+
+  cat <<EOT >/root/.nanorc
+# This file was generated by $SCRIPT_FILENAME
+# DO NOT EDIT THIS FILE BY HAND -- CHANGES WILL BE OVERWRITTEN
+
+# Full reference and default configuration file found at '/etc/nanorc'
+
+set atblanks
+set autoindent
+# unset casesensitive
+set constantshow
+set cutfromcursor
+set indicator
+set linenumbers
+# set minibar
+set mouse
+set positionlog
+set smarthome
+set softwrap
+set tabsize 4
+set tabstospaces
+set zap
+
+set titlecolor bold,white,magenta
+set promptcolor black,yellow
+set statuscolor bold,white,magenta
+set errorcolor bold,white,red
+set spotlightcolor black,orange
+set selectedcolor lightwhite,cyan
+set stripecolor ,yellow
+set scrollercolor magenta
+set numbercolor magenta
+set keycolor lightmagenta
+set functioncolor magenta
+
+extendsyntax python tabgives "    "
+extendsyntax makefile tabgives "	"
+
+# bind ^X cut main
+bind ^C copy main
+bind ^V paste all
+# bind ^Q exit all
+bind ^S savefile main
+# bind ^W writeout main
+# bind ^O insert main
+bind ^H help all
+bind ^H exit help
+bind ^F whereis all
+bind ^G findnext all
+bind ^B wherewas all
+bind ^D findprevious all
+bind ^R replace main
+bind ^Z undo main
+bind ^Y redo main
+
+bind ^T gotoline main
+EOT
 }
 
 __configure_profile() {
@@ -675,7 +732,7 @@ __ssh_config() {
 # This file was generated by $SCRIPT_FILENAME
 # DO NOT EDIT THIS FILE BY HAND -- CHANGES WILL BE OVERWRITTEN
 
-if [ ! -e $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN ]; then
+if [ -d $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN ]; then
   mkdir -p $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN
   key_count=0
   key_count=\\\$(ls -1 $SSH_CONFIG_PREFIX/\\\$YOLO_DOMAIN | grep --color=never -o id_ed25519.fingerprint | wc -l)
@@ -1152,13 +1209,35 @@ main "\$@"
 # We shouldn't reach this point
 exec tail -f /dev/null
 EOF
-    chmod +x "$ENTRYPOINT_PATH")"$ENTRYPOINT_PATH":"$ENTRYPOINT_CONTAINER_PATH" \
-    --mount type=volume,source="$YOLO_VOLUME_NAME",target=/root \
-    -v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh" -v "$YOLO_PROFILE_TARGET/.kube:/root/.kube" \-v "$YOLO_PROFILE_TARGET/.aws:/root/.aws" \
-    -v "$YOLO_PROFILE_TARGET/$8/.local:/root/.local/$7" -v "$YOLO_PROFILE_TARGET/$8/profile.$7.d:/etc/profile.$7.d" \
-    -v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC" \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    --cap-add=NET_ADMIN --device /dev/net/tun \
+
+  chmod +x "$ENTRYPOINT_PATH") && \
+  docker logs -f $(volume_mounts=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
+    bind_mounts=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
+    bind_mounts+=(-v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC")
+    if test "${YOLO_VOLUME_MOUNT_LOCAL:-true}" = "true" ; then
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/.local:/root/.local/$7")
+    fi
+    if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/profile.$7.d:/etc/profile.$7.d")
+    fi
+    if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh")
+    fi
+    if test "${YOLO_VOLUME_MOUNT_PLATFORM:-false}" = "true" ; then
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.kube:/root/.kube")
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.aws:/root/.aws")
+    fi
+    if test "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ; then
+      bind_mounts+=(-v /var/run/docker.sock:/var/run/docker.sock)
+    fi
+    if test "${YOLO_PRIVELEGED_CAPS:-true}" = "true" ; then
+      priveleged_caps=(--cap-add=NET_ADMIN --device /dev/net/tun)
+    fi
+    set -x; docker run -d --name="$CONTAINER_NAME" --platform="$DOCKER_DEFAULT_PLATFORM" \
+    -e "TZ=America/Chicago" -e "VISUAL=nano" -e "TERM=${TERM//256/}" \
+    -e "GIT_CONFIG_USERNAME=${GIT_CONFIG_USERNAME}" -e "GIT_CONFIG_FULL_NAME=${GIT_CONFIG_FULL_NAME}" \
+    -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
+    "${bind_mounts[@]}" "${volume_mounts[@]}" "${priveleged_caps[@]}" \
     -p "$PORT_EIGHT_THOUSAND:8000" -p "$PORT_EIGHTY_EIGHTY:8080" \
     --init --entrypoint "$ENTRYPOINT_CONTAINER_PATH" "$8:latest"
 ) | tee -a "$SCRIPT_DIR/${CONTAINER_NAME}.log" 2>&1
