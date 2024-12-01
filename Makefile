@@ -118,16 +118,19 @@ clean: ## Prune images and volumes
 .PHONY: fix-permissions
 fix-permissions: ## Fixes .dockermount permissions for multiple users
 	@(set -x; [ "$$(uname -s)" != "Darwin" ] || ! test -d .dockermount || sudo chown -R :staff .dockermount)
-	@(set -x; ! test -d .dockermount || find .dockermount -type d -mindepth 1 -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh' -mindepth 1 -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -mindepth 1 -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -mindepth 1 -exec sudo chmod 0664 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type d -exec sudo chmod 0775 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh' -exec sudo chmod 0775 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -exec sudo chmod 0775 {} \;)
+	@(set -x; ! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -exec sudo chmod 0664 {} \;)
 
+.PHONY: fix-git-permissions
+fix-git-permissions: ## Fixes git permissions to single user
+	@(set -x; [ "$$(uname -s)" != "Darwin" ] || ! test -d .git || sudo chown -R :wheel .git)
+	@(set -x; ! test -d .git || find .git -type d -exec sudo chmod 0755 {} \;)
+	@(set -x; ! test -d .git || find .git -type f-exec sudo chmod 0644 {} \;)
 
 .PHONY: fix-all-permissions
-fix-all-permissions: fix-permissions ## Fixes all permissions for multiple users
+fix-all-permissions: fix-permissions fix-git-permissions ## Fixes all permissions for multiple users
 	@(set -x; find . -type d ! -name '.dockermount' ! -name '.git' -mindepth 1 -maxdepth 1 -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .git || find .git -type d -mindepth 1 -exec sudo chmod 0755 {} \;)
-	@(set -x; ! test -d .git || find .git -type d -mindepth 1 -exec sudo chmod 0644 {} \;)
-	@(set -x; find . -type f -mindepth 1 -maxdepth 1 ! -name '.*' ! -name '*.sh' -exec sudo chmod 0664 {} \;)
-	@(set -x; find . -type f -mindepth 1 -maxdepth 1 -name '*.sh' -exec sudo chmod 0775 {} \;)
+	@(set -x; find . -type f -maxdepth 1 ! -name '.*' ! -name '*.sh' -exec sudo chmod 0664 {} \;)
+	@(set -x; find . -type f -maxdepth 1 -name '*.sh' -exec sudo chmod 0775 {} \;)
