@@ -125,7 +125,7 @@ fix-permissions: ## Fixes .dockermount permissions for multiple users
 
 
 .PHONY: fix-all-permissions
-fix-all-permissions: fix-permissions ## Fixes permissions for multiple users
+fix-all-permissions: fix-permissions ## Fixes all permissions for multiple users
 	@(set -x; find . -type d ! -name '.dockermount' ! -name '.git' -mindepth 1 -maxdepth 1 -exec sudo chmod 0775 {} \;)
 	@(set -x; ! test -d .git || find .git -type d -mindepth 1 -exec sudo chmod 0755 {} \;)
 	@(set -x; ! test -d .git || find .git -type d -mindepth 1 -exec sudo chmod 0644 {} \;)
