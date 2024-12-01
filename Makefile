@@ -117,20 +117,24 @@ clean: ## Prune images and volumes
 
 .PHONY: fix-permissions
 fix-permissions: ## Fixes .dockermount permissions for multiple users
-	@(set -x; [ "$$(uname -s)" != "Darwin" ] || ! test -d .dockermount || sudo chown -R :staff .dockermount)
-	@(set -x; ! test -d .dockermount || find .dockermount -type d -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh' -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -exec sudo chmod 0775 {} \;)
-	@(set -x; ! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -exec sudo chmod 0664 {} \;)
+	@([ "$$(uname -s)" != "Darwin" ] || ! test -d .git || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \;)
+	@(! test -d .dockermount || find .dockermount -type d -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f -name '*.sh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
+
+.PHONY: share-git-permissions-darwin
+share-git-permissions-darwin: ## Fixes git permissions to single user
+	@(find . -type d -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \; -exec sh -c 'set -x; sudo chmod -R g+w {}' \;)
 
 .PHONY: fix-git-permissions
 fix-git-permissions: ## Fixes git permissions to single user
-	@(set -x; [ "$$(uname -s)" != "Darwin" ] || ! test -d .git || sudo chown -R :wheel .git)
-	@(set -x; ! test -d .git || find .git -type d -exec sudo chmod 0755 {} \;)
-	@(set -x; ! test -d .git || find .git -type f-exec sudo chmod 0644 {} \;)
+	@([ "$$(uname -s)" != "Darwin" ] || ! test -d .git || find . -type d -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :wheel {}' \;)
+	@(! test -d .git || find .git -type d -exec sh -c 'set -x; sudo chmod 0755 {}' \;)
+	@(! test -d .git || find .git -type f -exec sh -c 'set -x; sudo chmod 0644 {}' \;)
 
 .PHONY: fix-all-permissions
 fix-all-permissions: fix-permissions fix-git-permissions ## Fixes all permissions for multiple users
-	@(set -x; find . -type d ! -name '.dockermount' ! -name '.git' -mindepth 1 -maxdepth 1 -exec sudo chmod 0775 {} \;)
-	@(set -x; find . -type f -maxdepth 1 ! -name '.*' ! -name '*.sh' -exec sudo chmod 0664 {} \;)
-	@(set -x; find . -type f -maxdepth 1 -name '*.sh' -exec sudo chmod 0775 {} \;)
+	@(set -x; find . -type d ! -name '.dockermount' ! -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(set -x; find . -type f -maxdepth 1 ! -name '.*' ! -name '*.sh' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
+	@(set -x; find . -type f -maxdepth 1 -name '*.sh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
