@@ -56,7 +56,8 @@ SEED="${RANDOM:-$SEED}"; \
 DATA_MOUNT_SRC="/${DATA_MOUNT_SRC:-$(basename $YOLO_DATA_TARGET)}"; \
 YOLO_WHEEL=sudo YOLO_DEBUG=true; \
 SSH_CONFIG_PREFIX='$HOME/.ssh/github'; \
-ENTRYPOINT_PATH_PREFIX="$YOLO_PROFILE_TARGET/$YOLO_FLAVOR/bin"; \
+# use '$YOLO_PROFILE_TARGET/$YOLO_FLAVOR/bin' to put everything under a directory named according to '<flavor>'
+ENTRYPOINT_PATH_PREFIX="$YOLO_PROFILE_TARGET/bin"; \
 [ -r "$ENTRYPOINT_PATH_PREFIX" ] || mkdir -p $ENTRYPOINT_PATH_PREFIX; \
 set -- \
   "$SCRIPT_FILENAME" "$SEED" "$DATA_MOUNT_SRC" \
@@ -1218,11 +1219,11 @@ EOF
     bind_mounts=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
     bind_mounts+=(-v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC")
     if test "${YOLO_VOLUME_MOUNT_LOCAL:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/.local:/root/.local/$7")
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.local:/root/.local/$7") # use '$YOLO_PROFILE_TARGET/$8/.local:...' to put everything under a directory named according to '<flavor>'
     fi
     if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/profile.d:/etc/profile.d")
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/profile.$7.d:/etc/profile.$7.d")
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.d.$8:/etc/profile.d")
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.$7.d:/etc/profile.$7.d") # use '$YOLO_PROFILE_TARGET/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
     fi
     if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh")

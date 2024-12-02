@@ -120,10 +120,10 @@ clean: ## Prune images and volumes
 .PHONY: fix-permissions
 fix-permissions: ## Fixes .dockermount permissions for multiple users
 	@([ "$$(uname -s)" != "Darwin" ] || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \;)
-	@(! test -d .dockermount || find .dockermount -type d ! -name '.ssh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
-	@(! test -d .dockermount || find .dockermount -type f -name '*.sh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
-	@(! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
-	@(! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type d ! -name '.ssh' -not -path '**/.ssh/*' ! -name '.git' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f -name '*.sh' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
 
 .PHONY: share-git-permissions-darwin
 share-git-permissions-darwin: ## Fixes git permissions to single user
@@ -138,5 +138,5 @@ fix-git-permissions: ## Fixes git permissions to single user
 .PHONY: fix-all-permissions
 fix-all-permissions: fix-permissions fix-git-permissions ## Fixes all permissions for multiple users
 	@(set -x; find . -type d ! -name '.dockermount' ! -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
-	@(set -x; find . -type f -maxdepth 1 ! -name '.*' ! -name '*.sh' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
-	@(set -x; find . -type f -maxdepth 1 -name '*.sh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@(set -x; find . -type f -maxdepth 1 ! -name '.*' ! -name '*.sh' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
+	@(set -x; find . -type f -maxdepth 1 -name '*.sh' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
