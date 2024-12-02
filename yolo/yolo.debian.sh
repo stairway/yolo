@@ -1222,7 +1222,7 @@ EOF
     data_path="$YOLO_DATA_TARGET"
     device_path=/dev/net/tun
     docker_sock_source_path=/var/run/docker.sock
-    if uname -s | grep -i mingw64 ; then
+    if uname -s | grep -i mingw64 >/dev/null ; then
       entrypoint_prefix="/$entrypoint_prefix"
       entrypoint_container="/$entrypoint_container"
       profile_prefix="/$profile_prefix"
@@ -1233,22 +1233,22 @@ EOF
     volume_mounts=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
     bind_mounts+=(-v "$entrypoint_prefix":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
     bind_mounts+=(-v "$data_path:$DATA_MOUNT_SRC")
-    if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
+    if [ "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ] ; then
       bind_mounts+=(-v "$profile_prefix/.local/$8:/root/.local/$7") # use '$profile_prefix/$8/.local:...' to put everything under a directory named according to '<flavor>'
       bind_mounts+=(-v "$profile_prefix/profile.d/$8:/etc/profile.d")
       bind_mounts+=(-v "$profile_prefix/profile.$7.d:/etc/profile.$7.d") # use '$profile_prefix/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
     fi
-    if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then
+    if [ "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ] ; then
       bind_mounts+=(-v "$profile_prefix/.ssh:/root/.ssh")
     fi
-    if test "${YOLO_VOLUME_MOUNT_PLATFORM:-false}" = "true" ; then
+    if [ "${YOLO_VOLUME_MOUNT_PLATFORM:-false}" = "true" ]; then
       bind_mounts+=(-v "$profile_prefix/.kube:/root/.kube")
       bind_mounts+=(-v "$profile_prefix/.aws:/root/.aws")
     fi
-    if test "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ; then
+    if [ "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ] ; then
       bind_mounts+=(-v "$docker_sock_source_path":/var/run/docker.sock)
     fi
-    if test "${YOLO_TAILSCALED_ENABLED:-true}" = "true" ; then
+    if [ "${YOLO_TAILSCALED_ENABLED:-true}" = "true" ] ; then
       priveleged_caps+=(--cap-add=NET_ADMIN --device "$device_path")
     fi
     set -x; docker run -d --name="$CONTAINER_NAME" --platform="$DOCKER_DEFAULT_PLATFORM" \
