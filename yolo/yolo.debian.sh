@@ -1217,16 +1217,16 @@ EOF
   chmod +x "$ENTRYPOINT_PATH") && \
   docker logs -f $(unset volume_mounts bind_mounts priveleged_caps
     entrypoint_prefix="$ENTRYPOINT_PATH_PREFIX"
-    entrypiont_container="$ENTRYPOINT_CONTAINER_PATH"
+    entrypoint_container="$ENTRYPOINT_CONTAINER_PATH"
     profile_prefix="$YOLO_PROFILE_TARGET"
     data_path="$YOLO_DATA_TARGET"
     device_path=/dev/net/tun
     docker_sock_source_path=/var/run/docker.sock
     if uname -s | grep -i mingw64 ; then
       entrypoint_prefix="/$entrypoint_prefix"
-      entrypiont_container_path="/$entrypiont_container_path"
+      entrypoint_container="/$entrypoint_container"
       profile_prefix="/$profile_prefix"
-      data_path="$data_path"
+      data_path="/$data_path"
       device_path="/$device_path"
       docker_sock_source_path="/$docker_sock_source_path"
     fi
@@ -1257,7 +1257,7 @@ EOF
     -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
     "${volume_mounts[@]}" "${bind_mounts[@]}" "${priveleged_caps[@]}" \
     -p "$PORT_EIGHT_THOUSAND:8000" -p "$PORT_EIGHTY_EIGHTY:8080" \
-    --init --entrypoint "$entrypiont_container" "$8:latest"
+    --init --entrypoint "$entrypoint_container" "$8:latest"
 ) | tee -a "$SCRIPT_DIR/${CONTAINER_NAME}.log" 2>&1
 
 # Update port mappings of existing container
