@@ -1215,8 +1215,9 @@ exec tail -f /dev/null
 EOF
 
   chmod +x "$ENTRYPOINT_PATH") && \
-  docker logs -f $(volume_mounts=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
-    bind_mounts=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
+  docker logs -f $(unset volume_mounts bind_mounts priveleged_caps
+    volume_mounts+=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
+    bind_mounts+=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
     bind_mounts+=(-v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC")
     if test "${YOLO_VOLUME_MOUNT_LOCAL:-true}" = "true" ; then
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.local/$8:/root/.local/$7") # use '$YOLO_PROFILE_TARGET/$8/.local:...' to put everything under a directory named according to '<flavor>'
@@ -1235,8 +1236,8 @@ EOF
     if test "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ; then
       bind_mounts+=(-v /var/run/docker.sock:/var/run/docker.sock)
     fi
-    if test "${YOLO_PRIVELEGED_CAPS:-true}" = "true" ; then
-      priveleged_caps=(--cap-add=NET_ADMIN --device /dev/net/tun)
+    if test "${YOLO_TAILSCALED_ENABLED:-true}" = "true" ; then
+      priveleged_caps+=(--cap-add=NET_ADMIN --device /dev/net/tun)
     fi
     set -x; docker run -d --name="$CONTAINER_NAME" --platform="$DOCKER_DEFAULT_PLATFORM" \
     -e "TZ=America/Chicago" -e "VISUAL=nano" -e "TERM=${TERM//256/}" \
