@@ -1226,7 +1226,7 @@ EOF
       entrypoint_prefix="/$entrypoint_prefix"
       entrypoint_container="/$entrypoint_container"
       profile_prefix="/$profile_prefix"
-      data_path="$data_path"
+      data_path="/$data_path"
       device_path="/$device_path"
       docker_sock_source_path="/$docker_sock_source_path"
     fi
