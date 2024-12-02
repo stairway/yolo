@@ -1216,36 +1216,48 @@ EOF
 
   chmod +x "$ENTRYPOINT_PATH") && \
   docker logs -f $(unset volume_mounts bind_mounts priveleged_caps
-    volume_mounts+=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
-    bind_mounts+=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
-    bind_mounts+=(-v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC")
-    if test "${YOLO_VOLUME_MOUNT_LOCAL:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.local/$8:/root/.local/$7") # use '$YOLO_PROFILE_TARGET/$8/.local:...' to put everything under a directory named according to '<flavor>'
+    entrypoint_prefix="$ENTRYPOINT_PATH_PREFIX"
+    entrypiont_container="$ENTRYPOINT_CONTAINER_PATH"
+    profile_prefix="$YOLO_PROFILE_TARGET"
+    data_path="$YOLO_DATA_TARGET"
+    device_path=/dev/net/tun
+    docker_sock_source_path=/var/run/docker.sock
+    if uname -s | grep -i mingw64 ; then
+      entrypoint_prefix="/$entrypoint_prefix"
+      entrypiont_container_path="/$entrypiont_container_path"
+      profile_prefix="/$profile_prefix"
+      data_path="$data_path"
+      device_path="/$device_path"
+      docker_sock_source_path="/$docker_sock_source_path"
     fi
+    volume_mounts=(--mount type=volume,source="$YOLO_VOLUME_NAME",target=/root)
+    bind_mounts+=(-v "$entrypoint_prefix":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
+    bind_mounts+=(-v "$data_path:$DATA_MOUNT_SRC")
     if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.d/$8:/etc/profile.d")
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.$7.d:/etc/profile.$7.d") # use '$YOLO_PROFILE_TARGET/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
+      bind_mounts+=(-v "$profile_prefix/.local/$8:/root/.local/$7") # use '$profile_prefix/$8/.local:...' to put everything under a directory named according to '<flavor>'
+      bind_mounts+=(-v "$profile_prefix/profile.d/$8:/etc/profile.d")
+      bind_mounts+=(-v "$profile_prefix/profile.$7.d:/etc/profile.$7.d") # use '$profile_prefix/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
     fi
     if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh")
+      bind_mounts+=(-v "$profile_prefix/.ssh:/root/.ssh")
     fi
     if test "${YOLO_VOLUME_MOUNT_PLATFORM:-false}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.kube:/root/.kube")
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.aws:/root/.aws")
+      bind_mounts+=(-v "$profile_prefix/.kube:/root/.kube")
+      bind_mounts+=(-v "$profile_prefix/.aws:/root/.aws")
     fi
     if test "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ; then
-      bind_mounts+=(-v /var/run/docker.sock:/var/run/docker.sock)
+      bind_mounts+=(-v "$docker_sock_source_path":/var/run/docker.sock)
     fi
     if test "${YOLO_TAILSCALED_ENABLED:-true}" = "true" ; then
-      priveleged_caps+=(--cap-add=NET_ADMIN --device /dev/net/tun)
+      priveleged_caps+=(--cap-add=NET_ADMIN --device "$device_path")
     fi
     set -x; docker run -d --name="$CONTAINER_NAME" --platform="$DOCKER_DEFAULT_PLATFORM" \
     -e "TZ=America/Chicago" -e "VISUAL=nano" -e "TERM=${TERM//256/}" \
     -e "GIT_CONFIG_USERNAME=${GIT_CONFIG_USERNAME}" -e "GIT_CONFIG_FULL_NAME=${GIT_CONFIG_FULL_NAME}" \
     -e "GIT_CONFIG_EMAIL=${GIT_CONFIG_EMAIL}" -e "YOLO_DOMAIN=${YOLO_DOMAIN}" \
-    "${bind_mounts[@]}" "${volume_mounts[@]}" "${priveleged_caps[@]}" \
+    "${volume_mounts[@]}" "${bind_mounts[@]}" "${priveleged_caps[@]}" \
     -p "$PORT_EIGHT_THOUSAND:8000" -p "$PORT_EIGHTY_EIGHTY:8080" \
-    --init --entrypoint "$ENTRYPOINT_CONTAINER_PATH" "$8:latest"
+    --init --entrypoint "$entrypiont_container" "$8:latest"
 ) | tee -a "$SCRIPT_DIR/${CONTAINER_NAME}.log" 2>&1
 
 # Update port mappings of existing container
