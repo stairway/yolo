@@ -807,8 +807,8 @@ export EDITOR="\$VISUAL"
 export GIT_EDITOR="\$VISUAL"
 export TERM="\$TERM"
 
-if [ -n "$7" -a -d "~/.local/$7" ]; then
-  HISTFILE="~/.local/$7/.bash_history"
+if [ -n "$7" -a -d "\$HOME/.local/$7" ]; then
+  HISTFILE="\$HOME/.local/$7/.bash_history"
 fi
 
 quit() { printf "🤖 %s 🤖\n" "Klaatu barada nikto"; }
@@ -1219,10 +1219,10 @@ EOF
     bind_mounts=(-v "$ENTRYPOINT_PATH_PREFIX":"$(dirname $ENTRYPOINT_CONTAINER_PATH)")
     bind_mounts+=(-v "$YOLO_DATA_TARGET:$DATA_MOUNT_SRC")
     if test "${YOLO_VOLUME_MOUNT_LOCAL:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.local:/root/.local/$7") # use '$YOLO_PROFILE_TARGET/$8/.local:...' to put everything under a directory named according to '<flavor>'
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.local/$8:/root/.local/$7") # use '$YOLO_PROFILE_TARGET/$8/.local:...' to put everything under a directory named according to '<flavor>'
     fi
     if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
-      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.d.$8:/etc/profile.d")
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.d/$8:/etc/profile.d")
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.$7.d:/etc/profile.$7.d") # use '$YOLO_PROFILE_TARGET/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
     fi
     if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then
