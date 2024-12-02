@@ -1221,6 +1221,7 @@ EOF
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/.local:/root/.local/$7")
     fi
     if test "${YOLO_VOLUME_MOUNT_PROFILE:-true}" = "true" ; then
+      bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/profile.d:/etc/profile.d")
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/$8/profile.$7.d:/etc/profile.$7.d")
     fi
     if test "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ; then

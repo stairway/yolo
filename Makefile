@@ -119,8 +119,8 @@ clean: ## Prune images and volumes
 
 .PHONY: fix-permissions
 fix-permissions: ## Fixes .dockermount permissions for multiple users
-	@([ "$$(uname -s)" != "Darwin" ] || ! test -d .git || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \;)
-	@(! test -d .dockermount || find .dockermount -type d -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
+	@([ "$$(uname -s)" != "Darwin" ] || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \;)
+	@(! test -d .dockermount || find .dockermount -type d ! -name '.ssh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
 	@(! test -d .dockermount || find .dockermount -type f -name '*.sh' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
 	@(! test -d .dockermount || find .dockermount -type f -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
 	@(! test -d .dockermount || find .dockermount -type f ! -name '*.sh' ! -name '*.sh.*' -exec sh -c 'set -x; sudo chmod 0664 {}' \;)
@@ -131,7 +131,7 @@ share-git-permissions-darwin: ## Fixes git permissions to single user
 
 .PHONY: fix-git-permissions
 fix-git-permissions: ## Fixes git permissions to single user
-	@([ "$$(uname -s)" != "Darwin" ] || ! test -d .git || find . -type d -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :wheel {}' \;)
+	@([ "$$(uname -s)" != "Darwin" ] || find . -type d -name '.git' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :wheel {}' \;)
 	@(! test -d .git || find .git -type d -exec sh -c 'set -x; sudo chmod 0755 {}' \;)
 	@(! test -d .git || find .git -type f -exec sh -c 'set -x; sudo chmod 0644 {}' \;)
 
