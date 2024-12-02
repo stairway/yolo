@@ -7,12 +7,14 @@ YOLO_DATA_TARGET_DEFAULT = ~/Data
 YOLO_VAULT_SERVER_DEV_DEFAULT = y
 
 YOLO_DEBIAN_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Full Name" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_DEBIAN_DOMAIN ?= $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${YOLO_DOMAIN:-example.com}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Domain" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 YOLO_DEBIAN_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; domain="$${YOLO_DOMAIN:-example.com}"; value="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Email" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 YOLO_DEBIAN_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "GitHub Username" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 YOLO_DEBIAN_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; value="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$value -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Data mount target" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 
 YOLO_UBUNTU_GIT_CONFIG_FULL_NAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${GIT_CONFIG_FULL_NAME:-"Andrew Haller"}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Full Name" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
-YOLO_UBUNTU_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; domain="$${YOLO_DOMAIN:-example.com}"; value="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Email" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_UBUNTU_DOMAIN ?= $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${YOLO_DOMAIN:-example.com}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Domain" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
+YOLO_UBUNTU_GIT_CONFIG_EMAIL = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; domain="$(YOLO_UBUNTU_DOMAIN)"; value="$${GIT_CONFIG_EMAIL:-andrew.haller@$${domain}}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Email" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 YOLO_UBUNTU_GIT_CONFIG_USERNAME = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${GIT_CONFIG_USERNAME:-andrewhaller}"; read -e -i "$$value" -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "GitHub Username" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 YOLO_UBUNTU_DATA_TARGET = $(shell bash -c '[ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; value="$${YOLO_DATA_TARGET:-$(YOLO_DATA_TARGET_DEFAULT)}"; read -e -i $$value -p "$$(printf "\033[32;1m%s\033[0m %s \033[2m[%s]\033[0m" "?" "Data mount target" "$$value"): " input && [ -n "$$input" ] || input="$$value"; echo "$$input"')
 
@@ -61,14 +63,14 @@ network: .network ## Create docker network
 
 .PHONY: ubuntu
 ubuntu: .containerfy_ubuntu ## Ubuntu container
-	@bash -c 'conrol_c() { LC_ALL=C $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) sh $(SCRIPT_DIR)/yolo/yolo.sh'
+	@bash -c 'conrol_c() { LC_ALL=C $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/ubuntu.env ] || . ./yolo/ubuntu.env; GIT_CONFIG_FULL_NAME="$(YOLO_UBUNTU_GIT_CONFIG_FULL_NAME)" YOLO_DOMAIN="$${YOLO_UBUNTU_DOMAIN}" GIT_CONFIG_EMAIL="$(YOLO_UBUNTU_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_UBUNTU_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_UBUNTU_DATA_TARGET) sh $(SCRIPT_DIR)/yolo/yolo.sh'
 
 .containerfy_debian: install
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "debian"
 
 .PHONY: debian
 debian: .containerfy_debian ## Debian container
-	@bash -c 'conrol_c() { LC_ALL=C $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) sh $(SCRIPT_DIR)/yolo/yolo.debian.sh'
+	@bash -c 'conrol_c() { LC_ALL=C $(MAKE) .network_msg; exit 0; }; trap conrol_c SIGINT SIGTERM SIGHUP; [ ! -f ./yolo/debian.env ] || . ./yolo/debian.env; GIT_CONFIG_FULL_NAME="$(YOLO_DEBIAN_GIT_CONFIG_FULL_NAME)" YOLO_DOMAIN="$${YOLO_DEBIAN_DOMAIN}" GIT_CONFIG_EMAIL="$(YOLO_DEBIAN_GIT_CONFIG_EMAIL)" GIT_CONFIG_USERNAME="$(YOLO_DEBIAN_GIT_CONFIG_USERNAME)" YOLO_DATA_TARGET=$(YOLO_DEBIAN_DATA_TARGET) sh $(SCRIPT_DIR)/yolo/yolo.debian.sh'
 
 .vault-dev:
 	@printf "\033[7;1m\t\t\tContainerfy %s\t\t\t\033[0m\n" "vault-server --dev"
