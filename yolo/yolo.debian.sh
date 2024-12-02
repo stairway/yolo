@@ -456,7 +456,7 @@ __configure_locale() {
   update-locale LANG=en_US.UTF-8
   # Export locale env vars
   # Do this if no using update-locale, in order to configure locale only for the user
-  cat <<EOT >>/etc/profile.d/01-locale-fix.sh
+  cat <<EOT >/etc/profile.d/01-locale-fix.sh
 
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
