@@ -3,15 +3,19 @@
 set -e
 LC_CTYPE=C
 
-check_bash_version() {
-  local target_version=${1:-3} current_version=${BASH_VERSINFO:-0} err=0
-  [ $current_version -ge $target_version ] || err=$?
-  [ ${err:-0} -gt 0 ] && \
-    printf "Requires bash version >=%s. Your current bash major version is %s.\n" "$target_version" "${current_version:-0}"
-  return $err
-}
+# Check bash version
+if [ ${BASH_VERSINFO:-0} -lt 3 ] ; then
+  printf "Requires bash version >=%d. Your current bash major version is %d.\n" 3 ${BASH_VERSINFO:-0}
+  return
+fi
 
-check_bash_version
+# https://github.com/borekb/docker-path-workaround
+if uname -s | grep -i mingw64 >/dev/null ; then
+  docker() { ( export MSYS_NO_PATHCONV=1; "docker.exe" "$@" ); }
+fi
+
+# To persist value without specifying '--platform', the following can be exported
+DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 YOLO_LOADED=${YOLO_LOADED:-false}
 YOLO_PROFILE_NAME="${1:-yolo}"
@@ -25,14 +29,6 @@ else
   SCRIPT_FILENAME="${YOLO_PROFILE_NAME}.${YOLO_FLAVOR}.sh"
   SCRIPT_DIR="$(pwd)"
 fi
-
-# https://github.com/borekb/docker-path-workaround
-if uname -s | grep -i mingw64 >/dev/null ; then
-  docker() { ( export MSYS_NO_PATHCONV=1; "docker.exe" "$@" ); }
-fi
-
-# To persist value without specifying '--platform', the following can be exported
-DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 # IMPORTANT - If you don't intend to override the defaults, make sure YOLO_DATA_TARGET and YOLO_PROFILE_TARGET are not set
 
@@ -726,6 +722,8 @@ git config --global core.editor "\\\${EDITOR}"
 git config --global color.diff auto
 git config --global init.defaultBranch main
 git config --global pull.rebase true
+# git config --global http.sslverify false
+# git config --global credential.helper store
 EOT
 }
 
