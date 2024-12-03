@@ -724,6 +724,7 @@ git config --global init.defaultBranch main
 git config --global pull.rebase true
 # git config --global http.sslverify false
 # git config --global credential.helper store
+# git config --global credential.helper '!f() { sleep 1; echo "username=${GIT_USER}" "password=${GIT_PASS}"; }; f'
 EOT
 }
 
