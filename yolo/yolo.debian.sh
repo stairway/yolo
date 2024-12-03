@@ -1228,14 +1228,14 @@ EOF
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.d/$8:/etc/profile.d")
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/profile.$7.d:/etc/profile.$7.d") # use '$YOLO_PROFILE_TARGET/$8/profile.$7.d:...' to put everything under a directory named according to '<flavor>'
     fi
-    if [ "${YOLO_VOLUME_MOUNT_SSH:-false}" = "true" ] ; then
+    if [ "${YOLO_VOLUME_MOUNT_SSH:-true}" = "true" ] ; then
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.ssh:/root/.ssh")
     fi
-    if [ "${YOLO_VOLUME_MOUNT_PLATFORM:-false}" = "true" ]; then
+    if [ "${YOLO_VOLUME_MOUNT_PLATFORM:-true}" = "true" ]; then
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.kube:/root/.kube")
       bind_mounts+=(-v "$YOLO_PROFILE_TARGET/.aws:/root/.aws")
     fi
-    if [ "${YOLO_VOLUME_MOUNT_DOCKER_SOCK:-false}" = "true" ] ; then
+    if [ "${YOLO_DOCKER_IN_DOCKER:-false}" = "true" ] ; then
       bind_mounts+=(-v /var/run/docker.sock:/var/run/docker.sock)
     fi
     if [ "${YOLO_TAILSCALED_ENABLED:-true}" = "true" ] ; then
