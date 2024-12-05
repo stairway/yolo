@@ -316,8 +316,9 @@ __configure_nanorc() {
   sed -E -z -i "s@#?\s*(set\s*casesensitive)@\1@g" /etc/nanorc
 
   cat <<EOT >/root/.nanorc
+# For command cheatsheat, see https://www.nano-editor.org/dist/latest/cheatsheat.html
+# For nano reference, see https://www.nano-editor.org/dist/latest/nano.html)
 # For nanorc reference, see https://www.nano-editor.org/dist/latest/nanorc.5.html
-# For nano command reference, see https://www.nano-editor.org/dist/latest/nano.html)
 
 # Optionally install nanorc
 # brew install nano nanorc
