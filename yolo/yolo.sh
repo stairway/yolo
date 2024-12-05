@@ -316,8 +316,8 @@ __configure_nanorc() {
   sed -E -z -i "s@#?\s*(set\s*casesensitive)@\1@g" /etc/nanorc
 
   cat <<EOT >/root/.nanorc
-# For full nanorc reference, see https://www.nano-editor.org/dist/latest/nanorc.5.html
-# (pdf also available: https://www.nano-editor.org/dist/latest/nano.pdf)
+# For nanorc reference, see https://www.nano-editor.org/dist/latest/nanorc.5.html
+# For nano command reference, see https://www.nano-editor.org/dist/latest/nano.html)
 
 # Optionally install nanorc
 # brew install nano nanorc
@@ -328,7 +328,7 @@ include "/opt/homebrew/share/nano*/*.nanorc"
 
 # Options
 set tabsize 4       # set tab size to number of columns
-set tabstospaces    # convert typed tab to spaces
+set tabstospaces    # converty typed tab to spaces
 set linenumbers     # display line numbers in left gutter
 set autoindent      # use auto-indentation
 set casesensitive   # search is case-sensitive be default
@@ -361,23 +361,36 @@ set keycolor lightmagenta
 set functioncolor magenta
 
 # Keybindings (custom modern); For full modern key bindings, invoke nano with the '--modernbindings' option
-# bind ^Q exit all
-# bind ^W writeout main
-# bind ^X cut main
-bind ^C copy main
-bind ^V paste all
-bind ^S savefile main
-bind ^N insert main
-bind ^H help all
-bind ^H exit help
-bind ^F whereis all
-bind ^G findnext all
-bind ^B wherewas all
-bind ^D findprevious all
-bind ^R replace main
-bind ^Z undo main
-bind ^Y redo main
-bind ^T gotoline main
+# bind ^Q exit          all
+# bind ^W writeout      main
+# bind ^X cut           main
+bind ^C copy            main
+bind ^V paste           all
+bind ^S savefile        main
+bind ^N insert          main
+bind ^P location        main
+bind ^F whereis         all
+bind ^G findnext        all
+bind ^B wherewas        all
+bind ^D findprevious    all
+bind ^R replace         main
+bind ^Z undo            main
+bind ^Y redo            main
+bind ^T gotoline        main
+
+bind M-/  comment       main
+bind ^Space complete    main
+
+bind ^H help            all
+bind ^H exit            help
+unbind ^J               main  # for those who rarely use justify
+unbind M-J              main  # for those who rarely use justify
+
+# bind M-N linenumbers  main
+# bind M-S softwrap     main
+# bind M-C constantshow main
+# bind M-R regexp       search
+# bind M-R regexp       replace
 
 # Preserve tabs for the following languages
 extendsyntax python tabgives "    "
