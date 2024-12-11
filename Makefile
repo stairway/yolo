@@ -119,7 +119,7 @@ clean: ## Prune images and volumes
 
 .PHONY: fix-permissions
 fix-permissions: ## Fixes .dockermount permissions for multiple users
-	@([ "$$(uname -s)" != "Darwin" ] || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R $(shell whoami):staff {}' \;)
+	@([ "$$(uname -s)" != "Darwin" ] || find . -type d -name '.dockermount' -mindepth 1 -maxdepth 1 -exec sh -c 'set -x; sudo chown -R :staff {}' \;)
 	@(! test -d .dockermount || find .dockermount -type d ! -name '.ssh' -not -path '**/.ssh/*' ! -name '.git' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
 	@(! test -d .dockermount || find .dockermount -type f -name '*.sh' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0775 {}' \;)
 	@(! test -d .dockermount || find .dockermount -type f ! -name '*.sh' -not -path '**/.git/*' -exec sh -c 'set -x; sudo chmod 0664 {}' \; -exec sh -c 'set -x; sudo chown $$(whoami) {}' \;)
